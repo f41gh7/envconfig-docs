@@ -22,7 +22,7 @@ func walkStructPrefix(prefix string, currStruct *ast.StructType, fileDesc io.Wri
 				switch  reflect.TypeOf(field.Type).String() {
 				case "*ast.StructType":
 					logDebug("its struct: %s, walk deeper",field.Names[0].Name)
-					walkStructPrefix(prefix+strings.ToUpper(field.Names[0].Name), field.Type.(*ast.StructType), fileDesc)
+					walkStructPrefix(prefix+ "_"  + strings.ToUpper(field.Names[0].Name), field.Type.(*ast.StructType), fileDesc)
 				case "*ast.Ident":
 					logDebug("its ident %s, %s \n", field.Names[0].Name, field.Type.(*ast.Ident).Name)
 				case "*ast.SelectorExpr":

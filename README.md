@@ -58,7 +58,7 @@ it will produce markdown output:
 
 ```markdown
 # Auto Generated vars for package conf 
-## updated at Mon Aug 17 00:26:35 UTC 2020 
+## updated at Mon Aug 17 00:50:40 UTC 2020 
 
 
 | varible name | variable default value | variable required | variable description |
@@ -66,9 +66,9 @@ it will produce markdown output:
 | examplePref_NAME | named | false | Name of our main varwith multiline comment |
 | examplePref_MATCHPATHS | path1,path2,path3 | false | paths with array format |
 | SIMPLE_FIELD | onelevelNest | false | Nested field value with override |
-| examplePref_MULTINESTEDINNERFIELDINNERCOUNT | 15 | false | inner field with int value |
-| examplePref_MULTINESTEDINNERFIELDTRUNCATEDFIELD | verylooooooooooooooooooooooooo | false | truncated, can be shown with flag -truncate=false |
-| examplePref_USERPASSWORD | user:password1,user2:password2 | false | user password combinatio |
+| examplePref__MULTINESTED_INNERFIELDINNERCOUNT | 15 | false | inner field with int value |
+| examplePref__MULTINESTED_INNERFIELDTRUNCATEDFIELD | verylooooooooooooooooooooooooo | false | truncated, can be shown with flag -truncate=false |
+| examplePref_USERPASSWORD | user:password1,user2:password2 | false | user password combination |
 
 ```
 
