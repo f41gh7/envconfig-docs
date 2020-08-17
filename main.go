@@ -61,7 +61,7 @@ func main() {
 	var prefix string
 	if *prefixOverride != ""{
 		logDebug("overriding prefix with value: %s",*prefixOverride)
-		prefix = *prefixOverride + "_"
+		prefix = *prefixOverride
 	}else{
 		prefix = extractConstPrefix(node.Decls)
 

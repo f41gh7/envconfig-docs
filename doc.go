@@ -74,7 +74,7 @@ func walkStructPrefix(prefix string, currStruct *ast.StructType, fileDesc io.Wri
 					}
 					// set description to comments, if it not set explicitly with tag
 					if fieldDescription == "-"{
-						logDebug("override fieldDescription")
+						logDebug("fieldName fieldDescription")
 						fieldDescription = fieldComments.String()
 					}
 				}
@@ -90,18 +90,24 @@ func walkStructPrefix(prefix string, currStruct *ast.StructType, fileDesc io.Wri
 						field.Names[0].Name = strings.Join(name, "_")
 					}
 				}
+				var fieldName string
+				// special case, when we are at first iteration
+				if !strings.HasSuffix(prefix,"_"){
+					fieldName = prefix  + "_" + strings.ToUpper(field.Names[0].Name)
+				}else{
+					fieldName = prefix  + strings.ToUpper(field.Names[0].Name)
 
-				override := prefix  + strings.ToUpper(field.Names[0].Name)
+				}
 
 				if tag.Get("envconfig") != "" {
-					override = tag.Get("envconfig")
+					fieldName = tag.Get("envconfig")
 
 				}
 				if *truncate {
-					_, _ = fileDesc.Write([]byte(fmt.Sprintf("| %v | %.30v | %.10v | %.50v |\n", override, fieldDefaultValue, fieldRequired, fieldDescription)))
+					_, _ = fileDesc.Write([]byte(fmt.Sprintf("| %v | %.30v | %.10v | %.50v |\n", fieldName, fieldDefaultValue, fieldRequired, fieldDescription)))
 
 				} else {
-					_, _ = fileDesc.Write([]byte(fmt.Sprintf("| %v | %v | %v | %v |\n", override, fieldDefaultValue, fieldRequired, fieldDescription)))
+					_, _ = fileDesc.Write([]byte(fmt.Sprintf("| %v | %v | %v | %v |\n", fieldName, fieldDefaultValue, fieldRequired, fieldDescription)))
 
 				}
 
@@ -141,9 +147,6 @@ func extractConstPrefix(node []ast.Decl)string {
 			}
 		}
 
-	}
-	if prefString != ""{
-		prefString += "_"
 	}
 	return prefString
 }
