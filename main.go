@@ -52,7 +52,7 @@ func main() {
 
 	fileDesc.Write([]byte(fmt.Sprintf(" updated at %v \n\n\n", generatedTime)))
 
-	fileDesc.Write([]byte(fmt.Sprintf("| varible name | variable default value | variable required | variable description |\n")))
+	fileDesc.Write([]byte(fmt.Sprintf("| variable name | variable default value | variable required | variable description |\n")))
 	fileDesc.Write([]byte(fmt.Sprintf("| --- | --- | --- | --- |\n")))
 	logDebug("starting parsing file")
 	logDebug("start searching prefix for our configuration")
