@@ -10,118 +10,114 @@ import (
 	"strings"
 )
 
-
 var (
 	gatherRegexp = regexp.MustCompile("([^A-Z]+|[A-Z][^A-Z]+|[A-Z]+)")
 )
 
 // walks over struct, extracts tags and comments and write it to writer
 func walkStructPrefix(prefix string, currStruct *ast.StructType, fileDesc io.Writer) {
-			logDebug("processing struct %v", currStruct)
-			for _, field := range currStruct.Fields.List {
-				switch  reflect.TypeOf(field.Type).String() {
-				case "*ast.StructType":
-					logDebug("its struct: %s, walk deeper",field.Names[0].Name)
-					walkStructPrefix(prefix+ "_"  + strings.ToUpper(field.Names[0].Name), field.Type.(*ast.StructType), fileDesc)
-				case "*ast.Ident":
-					logDebug("its ident %s, %s \n", field.Names[0].Name, field.Type.(*ast.Ident).Name)
-				case "*ast.SelectorExpr":
-					logDebug("ast exr selector: var: %s",field.Names[0].Name)
-				case "*ast.ArrayType":
-					logDebug("its array type : %s",field.Names[0].Name)
-				case "*ast.MapType":
-					logDebug("its map type: %s",field.Names[0].Name)
-				default:
-					logDebug("error, unsupported kind of field %s", reflect.TypeOf(field.Type).String())
+	logDebug("processing struct %v", currStruct)
+	for _, field := range currStruct.Fields.List {
+		switch reflect.TypeOf(field.Type).String() {
+		case "*ast.StructType":
+			logDebug("its struct: %s, walk deeper", field.Names[0].Name)
+			walkStructPrefix(prefix+"_"+strings.ToUpper(field.Names[0].Name), field.Type.(*ast.StructType), fileDesc)
+		case "*ast.Ident":
+			logDebug("its ident %s, %s \n", field.Names[0].Name, field.Type.(*ast.Ident).Name)
+		case "*ast.SelectorExpr":
+			logDebug("ast exr selector: var: %s", field.Names[0].Name)
+		case "*ast.ArrayType":
+			logDebug("its array type : %s", field.Names[0].Name)
+		case "*ast.MapType":
+			logDebug("its map type: %s", field.Names[0].Name)
+		default:
+			logDebug("error, unsupported kind of field %s", reflect.TypeOf(field.Type).String())
+			continue
+		}
+		// we skip fields without tags
+		if field.Tag == nil {
+			continue
+		}
+		// extract tags
+		tag := reflect.StructTag(field.Tag.Value[1 : len(field.Tag.Value)-1])
+
+		fieldDefaultValue, fieldDescription, fieldRequired := "-", "-", "false"
+
+		if tag.Get("default") != "" {
+			fieldDefaultValue = tag.Get("default")
+			logDebug("found default value of %s with value %s |\n", prefix+strings.ToUpper(field.Names[0].Name), fieldDefaultValue)
+
+		}
+		if tag.Get("required") != "" {
+			fieldRequired = tag.Get("required")
+		}
+		if tag.Get("description") != "" {
+			fieldDescription = tag.Get("description")
+		}
+
+		if field.Doc != nil {
+			var fieldComments strings.Builder
+			logDebug("comments isn't nil %s", field.Doc.Text())
+			for _, comment := range field.Doc.List {
+				commentValue := comment.Text
+				commentValue = strings.TrimLeft(commentValue, "//")
+				commentValue = strings.TrimLeft(commentValue, " ")
+				// skip TODO and lines started with generation comment +
+				if strings.Contains(commentValue, "TODO") || strings.HasPrefix(commentValue, "+") {
 					continue
 				}
-				// we skip fields without tags
-				if field.Tag == nil {
-					continue
-				}
-				// extract tags
-				tag := reflect.StructTag(field.Tag.Value[1 : len(field.Tag.Value)-1])
+				logDebug("comment: %v", commentValue)
 
-
-				fieldDefaultValue, fieldDescription, fieldRequired := "-","-","false"
-
-				if tag.Get("default") != "" {
-					fieldDefaultValue = tag.Get("default")
-					logDebug("found default value of %s with value %s |\n", prefix+strings.ToUpper(field.Names[0].Name), fieldDefaultValue)
-
-				}
-				if tag.Get("required") != "" {
-					fieldRequired = tag.Get("required")
-				}
-				if tag.Get("description") != "" {
-					fieldDescription = tag.Get("description")
-				}
-
-				if field.Doc != nil {
-					var fieldComments strings.Builder
-					logDebug("comments isn't nil %s",field.Doc.Text())
-					for _,comment := range field.Doc.List{
-						commentValue := comment.Text
-						commentValue = strings.TrimLeft(commentValue,"//")
-						commentValue = strings.TrimLeft(commentValue," ")
-						// skip TODO and lines started with generation comment +
-						if strings.Contains(commentValue,"TODO") || strings.HasPrefix(commentValue,"+"){
-							continue
-						}
-						logDebug("comment: %v",commentValue)
-
-						fieldComments.WriteString(commentValue)
-					}
-					// set description to comments, if it not set explicitly with tag
-					if fieldDescription == "-"{
-						logDebug("fieldName fieldDescription")
-						fieldDescription = fieldComments.String()
-					}
-				}
-
-				if tag.Get("split_words") == "true" {
-					words := gatherRegexp.FindAllStringSubmatch(field.Names[0].Name, -1)
-					if len(words) > 0 {
-						var name []string
-						for _, words := range words {
-							name = append(name, words[0])
-						}
-
-						field.Names[0].Name = strings.Join(name, "_")
-					}
-				}
-				var fieldName string
-				// special case, when we are at first iteration
-				if !strings.HasSuffix(prefix,"_"){
-					fieldName = prefix  + "_" + strings.ToUpper(field.Names[0].Name)
-				}else{
-					fieldName = prefix  + strings.ToUpper(field.Names[0].Name)
-
-				}
-
-				if tag.Get("envconfig") != "" {
-					fieldName = tag.Get("envconfig")
-
-				}
-				if *truncate {
-					_, _ = fileDesc.Write([]byte(fmt.Sprintf("| %v | %.30v | %.10v | %.50v |\n", fieldName, fieldDefaultValue, fieldRequired, fieldDescription)))
-
-				} else {
-					_, _ = fileDesc.Write([]byte(fmt.Sprintf("| %v | %v | %v | %v |\n", fieldName, fieldDefaultValue, fieldRequired, fieldDescription)))
-
-				}
-
-				logDebug("processed struct: %v", currStruct)
-
+				fieldComments.WriteString(commentValue)
 			}
+			// set description to comments, if it not set explicitly with tag
+			if fieldDescription == "-" {
+				logDebug("fieldName fieldDescription")
+				fieldDescription = fieldComments.String()
+			}
+		}
 
+		if tag.Get("split_words") == "true" {
+			words := gatherRegexp.FindAllStringSubmatch(field.Names[0].Name, -1)
+			if len(words) > 0 {
+				var name []string
+				for _, words := range words {
+					name = append(name, words[0])
+				}
 
+				field.Names[0].Name = strings.Join(name, "_")
+			}
+		}
+		var fieldName string
+		// special case, when we are at first iteration
+		if !strings.HasSuffix(prefix, "_") {
+			fieldName = prefix + "_" + strings.ToUpper(field.Names[0].Name)
+		} else {
+			fieldName = prefix + strings.ToUpper(field.Names[0].Name)
+
+		}
+
+		if tag.Get("envconfig") != "" {
+			fieldName = tag.Get("envconfig")
+
+		}
+		if *truncate {
+			_, _ = fileDesc.Write([]byte(fmt.Sprintf("| %v | %.30v | %.10v | %.50v |\n", fieldName, fieldDefaultValue, fieldRequired, fieldDescription)))
+
+		} else {
+			_, _ = fileDesc.Write([]byte(fmt.Sprintf("| %v | %v | %v | %v |\n", fieldName, fieldDefaultValue, fieldRequired, fieldDescription)))
+
+		}
+
+		logDebug("processed struct: %v", currStruct)
+
+	}
 
 }
 
 // list constants at file
 // try to find prefix constant name
-func extractConstPrefix(node []ast.Decl)string {
+func extractConstPrefix(node []ast.Decl) string {
 	var prefString string
 	for _, v := range node {
 		switch decl := v.(type) {
@@ -150,7 +146,7 @@ func extractConstPrefix(node []ast.Decl)string {
 	}
 	return prefString
 }
-func findStructsAndWalk(nodes []ast.Decl,prefix string,fileDesc io.Writer){
+func findStructsAndWalk(nodes []ast.Decl, prefix string, fileDesc io.Writer) {
 
 	for _, v := range nodes {
 		g, ok := v.(*ast.GenDecl)

@@ -4,7 +4,8 @@ import "time"
 
 const prefixVar = "examplePref"
 
-//BaseConfig - example
+// BaseConfig - example
+//
 //genvars:true`
 type BaseConfig struct {
 	// Name of our main var
@@ -21,8 +22,8 @@ type BaseConfig struct {
 	// for our oper
 	Timeout time.Duration `default:"10s"`
 	// paths with array format
-	MatchPaths []string `default:"path1,path2,path3"`
-	MultiNested   struct {
+	MatchPaths  []string `default:"path1,path2,path3"`
+	MultiNested struct {
 		SomeField  string `default:"onelevelNest" description:"Nested field value with override" envconfig:"SIMPLE_FIELD"`
 		InnerField struct {
 			InnerCount     int    `default:"15" description:"inner field with int value"`

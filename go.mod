@@ -1,3 +1,3 @@
 module github.com/f41gh7/envconfig-docs
 
-go 1.15
+go 1.22.4
