@@ -81,8 +81,7 @@ func main() {
 				fmt.Printf("cannot read output file: %s, error: %v", *outputFile, err)
 				os.Exit(1)
 			}
-		}
-		if outputFileContent != nil {
+		} else {
 			match := sumRegex.FindSubmatch(outputFileContent)
 			var foundSum string
 			for i, name := range sumRegex.SubexpNames() {
