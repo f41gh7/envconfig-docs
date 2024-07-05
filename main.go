@@ -27,6 +27,7 @@ var (
 	debug                = flag.String("debugs", "", "enables debug mode if not empty, debug will be written to stderr")
 	outputFile           = flag.String("output", "", "out put file for variables")
 	inputFile            = flag.String("input", "", "input go file with config struct, by default conf.go")
+	headerFile           = flag.String("header", "", "header file, which is appended to a generated content if defined")
 	truncate             = flag.Bool("truncate", true, "truncate variable  value longer then 30 symbols")
 	sumRegex             = regexp.MustCompile("\\[envconfig-sum\\]\\:[\\s]*(?P<sum>[^\\s]+)")
 )
@@ -47,6 +48,15 @@ func main() {
 		os.Exit(1)
 	}
 	fileDesc := &strings.Builder{}
+
+	if *headerFile != "" {
+		headerContent, err := os.ReadFile(*headerFile)
+		if err != nil {
+			fmt.Printf("cannot open header file %s, error: %v", *headerFile, err)
+			os.Exit(1)
+		}
+		fileDesc.Write(headerContent)
+	}
 
 	packName := node.Name.Name
 	_, err = fileDesc.Write([]byte(fmt.Sprintf("# Auto Generated vars for package %v \n", packName)))
@@ -97,7 +107,6 @@ func main() {
 	}
 
 	fileDesc.Write([]byte(fmt.Sprintf("[envconfig-sum]: %s", newSum)))
-
 	logDebug("finished program!")
 	generatedTime := time.Now().UTC().Format(time.UnixDate)
 	output := fmt.Sprintf(fileDesc.String(), generatedTime)
@@ -107,6 +116,7 @@ func main() {
 			fmt.Printf("cannot write to file: %s, error: %v", *outputFile, err)
 			os.Exit(1)
 		}
+		os.Exit(0)
 	}
 	_, _ = os.Stdout.Write([]byte(output))
 }
