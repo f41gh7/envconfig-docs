@@ -54,7 +54,7 @@ func main() {
 		panic(err)
 	}
 
-	fileDesc.Write([]byte(" updated at %v \n\n\n"))
+	fileDesc.Write([]byte(" updated at %v\n\n\n"))
 
 	fileDesc.Write([]byte(fmt.Sprintf("| variable name | variable default value | variable required | variable description |\n")))
 	fileDesc.Write([]byte(fmt.Sprintf("| --- | --- | --- | --- |\n")))
