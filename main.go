@@ -95,7 +95,7 @@ func main() {
 			match := sumRegex.FindSubmatch(outputFileContent)
 			var foundSum string
 			for i, name := range sumRegex.SubexpNames() {
-				if i != 0 && name == "sum" {
+				if i != 0 && name == "sum" && len(match) > i {
 					foundSum = string(match[i])
 				}
 			}
