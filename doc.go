@@ -58,10 +58,12 @@ func walkStructPrefix(prefix string, currStruct *ast.StructType, fileDesc io.Wri
 		if field.Doc != nil {
 			var fieldComments strings.Builder
 			logDebug("comments isn't nil %s", field.Doc.Text())
-			for _, comment := range field.Doc.List {
+			for i, comment := range field.Doc.List {
 				commentValue := comment.Text
 				commentValue = strings.TrimLeft(commentValue, "//")
-				commentValue = strings.TrimLeft(commentValue, " ")
+				if i == 0 {
+					commentValue = strings.TrimLeft(commentValue, " ")
+				}
 				// skip TODO and lines started with generation comment +
 				if strings.Contains(commentValue, "TODO") || strings.HasPrefix(commentValue, "+") {
 					continue
